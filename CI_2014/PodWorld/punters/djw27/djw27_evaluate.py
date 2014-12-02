@@ -1,63 +1,43 @@
+
+# This code would be a good place to start your evolution coding.
 from operator import itemgetter, attrgetter
 import math,random, copy, pickle
-from pod.pods import Sensor,gui
+import numpy
+import pprint
 
+import sys
+sys.path.append("../../")
+from pod import world,gui,pods
+
+pp = pprint.PrettyPrinter(indent=4)
+
+TEST=True
+
+if TEST:
+    GUI=True
+else:
+    GUI=False
 
 FORWARDS_ANGLE = math.radians(0)
 LEFT_ANGLE = math.radians(90)
 RIGHT_ANGLE = math.radians(-90)
 
-class MyData:
-
-    def __init__(self):
-        """
-        NN Constants
-        """
-        self.inputNeurons = 7
-        self.hiddenNeurons = 5
-        self.outputNeurons = 4
-        self.layerVector = [self.inputNeurons, self.hiddenNeurons, self.outputNeurons]
-        # Select an example weight to process through the neural
-        # net. In practice this would loop through the population.
-        self.weight = [[[0.017778289668618275, 0.9533231184481528, 0.41976422829814997, -0.8607994397726295, -0.18218545212449633],
-                        [-0.020832360519291236, 0.8248212256668508, -0.01520143224062287, -0.08806616618079072, 0.9898064504665314],
-                        [-0.2788335347251807, -0.6176053132737875, 0.10476598318049368, -0.043363941782328594, 0.8987053474110993],
-                        [0.7139177318330789, 0.032583872499533456, -0.11034816050616736, 0.8945059170256191, 0.16391383918186708],
-                        [-0.8947118220023427, -0.7423609777586484, -0.05721381744177598, -0.03859548842287741, -0.8476772183512125],
-                        [-0.24222522998176216, 0.8190624689263206, -0.8332771729090709, 0.031352566910217705, 0.18873483076032516],
-                        [0.7651030949286468, 0.884377994541315, -0.5229332622028304, 0.4356921380267271, 0.4260300470034277],
-                        [-0.6231155091271667, -0.1126392412527717, 0.004378904691721974, -0.24634736298935067, -0.09136557876280449]],
-                        [[0.578844569974907, -0.9310368236515731, -0.6416738726010356, 0.383530684408661],
-                        [0.9089312272284296, -0.045508124206933426, -0.1216854922082804, 0.06484663542685198],
-                        [0.8104525820899298, -0.7927235481140718, 0.5987747250538167, -0.40638587706646123],
-                        [0.5501878701556744, 0.08000524245140195, -0.8627505171857919, 0.8285991750252195],
-                        [-0.05568797047323062, 0.6721012010789854, 0.6316960864329721, -0.41823177477729434]]]
-        self.NN = NeuralNet(self.layerVector, self.weight)
-
-    def update(self, inputValues):
-        return self.NN.update(inputValues)
-
-
 def equip_car(pod):
 
-
-    sensors=[ Sensor(angle=FORWARDS_ANGLE,name="Forwards"),
-              Sensor(angle=LEFT_ANGLE/5,name="Eigth-Left"),
-              Sensor(angle=LEFT_ANGLE/3,name="Quarter-Left"),
-              Sensor(angle=RIGHT_ANGLE/5,name="Eigth-Right"),
-              Sensor(angle=RIGHT_ANGLE/3,name="QuarterRight"),
+    sensors=[ pods.Sensor(angle=FORWARDS_ANGLE,name="Forwards"),
+              pods.Sensor(angle=LEFT_ANGLE/5,name="Eigth-Left"),
+              pods.Sensor(angle=LEFT_ANGLE/3,name="Quarter-Left"),
+              pods.Sensor(angle=RIGHT_ANGLE/5,name="Eigth-Right"),
+              pods.Sensor(angle=RIGHT_ANGLE/3,name="QuarterRight"),
             ]
 
     pod.addSensors(sensors)
-    pod.col=(204,255,225)
-    pod.data= [0,0,0,0,0,0,0]
-    pod.poly=[(-20*random.random(),-20*random.random()),(-20*random.random(),20*random.random()),(20*random.random(),20*random.random()),(20*random.random(),-20*random.random())]
+    pod.col=(0,255,0)
+    pod.data=[0,0,0,0,0,0,0]    # default control system parameters
 
 
-def controller(pod,control):
-    pod.poly=[(-20*random.random(),-20*random.random()),(-20*random.random(),20*random.random()),(20*random.random(),20*random.random()),(20*random.random(),-20*random.random())]
 
-    Data = MyData()
+def controller(pod,control,NN):
 
     inputValues = [ pod.sensors[0].val,
                     pod.sensors[1].val,
@@ -67,7 +47,7 @@ def controller(pod,control):
                     pod.state.vel,
                     pod.state.slip,
                   ]
-    pod.data = Data.update(inputValues)
+    pod.data = NN.update(inputValues)
 
     """
     Simplest possible control system. The NN calculates
@@ -80,11 +60,60 @@ def controller(pod,control):
     control.left=pod.data[2]
     control.right=pod.data[3]
 
-    # Launch control
     if pod.state.age < 0.2:
         control.up=1.0
         control.down=0.0
+    """
 
+    if pod.data[0] > 0:
+        control.up=pod.data[0]
+        control.down=0
+    else:
+        control.up=0
+        control.down=abs(pod.data[0])
+    if pod.data[1] > 0:
+        control.left=pod.data[1]
+        control.right=0
+    else:
+        control.left=0
+        control.right=abs(pod.data[1])
+        """
+
+def evaluate(pod,NN,simple_gui):
+    """
+    Showing how you can evaluate the performance of your car.
+    """
+
+    TIME_LIMIT=40.0
+    TRIPS_LIMIT=60.0
+
+    # reset the state of the car before starting
+    pod.reset()
+
+    while True:
+
+        if GUI:
+            mess=str(pod.state)
+            simple_gui.set_message(mess)
+            simple_gui.display()
+
+            if simple_gui.check_for_quit():
+                break
+
+        if pod.state.collide:
+            dist=pod.state.pos_trips-pod.state.neg_trips+pod.state.seg_pos
+            age=pod.state.age
+            return dist
+
+        if pod.state.age > TIME_LIMIT:
+            dist=pod.state.pos_trips-pod.state.neg_trips
+            return dist
+
+        if pod.state.pos_trips - pod.state.neg_trips > TRIPS_LIMIT:
+            return TRIPS_LIMIT + (TIME_LIMIT-pod.state.age)
+
+        controller(pod,control,NN)
+        pod.step(control)
 
 class NeuralNet(object):
     """
@@ -148,6 +177,7 @@ class NeuralNet(object):
 
         # Return the outputs
         return self.out[len(self.layerVector)-1]
+
 
 class GeneticAlgorithm(object):
     """
@@ -340,13 +370,131 @@ def pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons):
 
             if GUI:
                 frames_per_sec=int(1/dt)
-                frames_per_sec=200
+                #frames_per_sec=200
                 simple_gui=gui.SimpleGui(frames_per_sec=frames_per_sec,world=world,pods=[pod])
 
                 fitness+=evaluate(pod, NN, simple_gui)
             else:
                 fitness+=evaluate(pod, NN, 0)
+
         weights.append(weight)
         fitnesses.append(fitness)
 
     return zip(weights, fitnesses)
+
+
+
+
+worlds = []
+worlds.append(world.World("../../worlds/carCircuit.world"))
+worlds.append(world.World("../../worlds/pjl_round.world"))
+worlds.append(world.World("../../worlds/pjl_long.world"))
+worlds.append(world.World("../../worlds/pjl_chick.world"))
+
+
+# use a control to activate the car.
+control=pods.Control()
+
+"""
+Constants are defined here
+"""
+previousFit = 0
+"""
+GA Constants
+"""
+POPSIZE         = 100      # Population size
+MAXITER         = 1000        # Maximum number of iterations
+CROSSOVERPROB   = 0.5       # Probability that we create by crossover breeding
+MUTATEPROB      = 0.1       # Mutation rate of crossover offspring
+ELITEPERCENT    = 0.1      # Percentage of ranked population to keep
+SELECTPERCENT   = 0.3       # Top 30% available for selection
+targetFitness   = 400
+
+NELITE  = int(POPSIZE*ELITEPERCENT)     # top of population survive
+NSELECT = int(POPSIZE*SELECTPERCENT)    # how many are bred
+"""
+NN Constants
+"""
+inputNeurons = 7
+hiddenNeurons = 5
+outputNeurons = 4
+layerVector = [inputNeurons, hiddenNeurons, outputNeurons]
+
+
+if TEST:
+    popR=loadPop()
+    pop,weights=zip(*popR)
+else:
+    # Initialise an instance of the GA and generate a random
+    # starting population
+    GA = GeneticAlgorithm(layerVector, POPSIZE)
+    #pop=GA.generatePop()
+    popR=loadPop()
+    popJ,weights=zip(*popR)
+    pop=[]
+    while len(pop)<(len(popJ)):
+        pop.append(popJ[0])
+
+# Evaluate the population and pair fitnesses and weights
+pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
+# Rank the population in order of fitness
+rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
+
+savePop(rankedPop)
+count = 0
+oldPop=[0]*POPSIZE
+oldFitness=[0]*POPSIZE
+oldRankedPop=zip(oldPop,oldFitness)
+
+mutateFlag=False
+mutateCount=0
+
+while count < MAXITER:
+    # If we have a new highest fitness then save the population
+    if rankedPop[0][-1] > previousFit:
+        previousFit = rankedPop[0][-1]
+        savePop(rankedPop)
+        print "Saved new Population with fitness: " + repr(rankedPop[0][-1]) + " Iteration: " + repr(count)
+
+    # If we have reached our goal then stop
+    if rankedPop[0][-1] >= targetFitness:
+        break
+
+    # Generate the new population
+    pop = GA.nextGen(rankedPop, mutateFlag, mutateCount)
+
+    #DEBUG
+    #for i in range(len(pop)):
+    #   if oldPop[0] == pop[i]:
+    #        print "Hit", i
+
+    # Evaluate the population and pair fitnesses and weights
+    pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
+
+    # Rank the population in order of fitness
+    rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
+
+    #print rankedPop[0][-1], oldFitness[0]
+
+    if rankedPop[0][-1] == oldFitness[0]:
+        mutateFlag=True
+        mutateCount+=1
+    else:
+        mutateCount=0
+
+    if mutateCount>5:
+        mutateCount=0
+
+    # If the new mutated highest fitness is less than
+    # the previously calculated then discard the new
+    # generation and replace with the old generation
+    if rankedPop[0][-1] < oldFitness[0]:
+        rankedPop = oldRankedPop
+
+    oldRankedPop = rankedPop
+
+    oldPop, oldFitness = zip(*oldRankedPop)
+
+    print "================================================="
+
+    count += 1
