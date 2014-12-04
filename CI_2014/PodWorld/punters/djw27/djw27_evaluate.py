@@ -11,7 +11,7 @@ from pod import world,gui,pods
 
 pp = pprint.PrettyPrinter(indent=4)
 
-TEST=False
+TEST=True
 
 if TEST:
     GUI=True
@@ -33,7 +33,7 @@ def equip_car(pod):
 
     pod.addSensors(sensors)
     pod.col=(0,255,0)
-    pod.data=[0,0,0,0]    # default control system parameters
+    pod.data=[0,0,0,0,0,0,0]    # default control system parameters
 
 
 
@@ -55,19 +55,29 @@ def controller(pod,control,NN):
     any given sensor values
     """
 
-    if pod.state.age < 0.45:
+    control.up=pod.data[0]
+    control.down=pod.data[1]
+    control.left=pod.data[2]
+    control.right=pod.data[3]
+
+    if pod.state.age < 0.2:
         control.up=1.0
         control.down=0.0
-        control.left=pod.data[2]
-        control.right=pod.data[3]
+    """
+
+    if pod.data[0] > 0:
+        control.up=pod.data[0]
+        control.down=0
     else:
-        if pod.sensors[0].val >= 400:
-            control.up=1.0
-        else:
-            control.up=pod.data[0]
-        control.down=pod.data[1]
-        control.left=pod.data[2]
-        control.right=pod.data[3]
+        control.up=0
+        control.down=abs(pod.data[0])
+    if pod.data[1] > 0:
+        control.left=pod.data[1]
+        control.right=0
+    else:
+        control.left=0
+        control.right=abs(pod.data[1])
+        """
 
 def evaluate(pod,NN,simple_gui):
     """
@@ -214,7 +224,7 @@ class GeneticAlgorithm(object):
             for j in range(len(m[i])):
                 for k in range(len(m[i][j])):
                     if random.random() < MUTATEPROB:
-                        m[i][j][k] += random.uniform(-1.0, 1.0)*0.05
+                        m[i][j][k] += random.uniform(-1.0, 1.0)*0.1
 
     def mutateMore(self, m):
         for i in range(len(m)):
@@ -257,7 +267,7 @@ class GeneticAlgorithm(object):
 
             while len(newPop) < POPSIZE:
                 i = random.randint(0,NSELECT-1)
-                if random.random() < 0:
+                if random.random() < CROSSOVERPROB:
                     j = random.randint(0,NSELECT-1)
                     while i==j:
                         j = random.randint(0,NSELECT-1)
@@ -322,7 +332,7 @@ def randomizeMatrix(matrix, a, b):
         for j in range ( len (matrix[0]) ):
             matrix[i][j] = random.uniform(a,b)
 
-def savePop(pop,filename="popSaved_forward_sense.dat"):
+def savePop(pop,filename="pop.dat"):
     """
     Saves a population
     """
@@ -331,7 +341,7 @@ def savePop(pop,filename="popSaved_forward_sense.dat"):
     pickle.dump(pop,fout)
     fout.close()
 
-def loadPop(filename="pop_forward_sense.dat"):
+def loadPop(filename="pop.dat"):
     """
     Loads a saved population
     """
@@ -360,7 +370,7 @@ def pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons):
 
             if GUI:
                 frames_per_sec=int(1/dt)
-                frames_per_sec=200
+                #frames_per_sec=200
                 simple_gui=gui.SimpleGui(frames_per_sec=frames_per_sec,world=world,pods=[pod])
 
                 fitness+=evaluate(pod, NN, simple_gui)
@@ -413,19 +423,17 @@ layerVector = [inputNeurons, hiddenNeurons, outputNeurons]
 
 if TEST:
     popR=loadPop()
-    pop,fitness=zip(*popR)
+    pop,weights=zip(*popR)
 else:
     # Initialise an instance of the GA and generate a random
     # starting population
     GA = GeneticAlgorithm(layerVector, POPSIZE)
     #pop=GA.generatePop()
     popR=loadPop()
-    popJ,fitness=zip(*popR)
-    previousFit = fitness[0]
+    popJ,weights=zip(*popR)
     pop=[]
-    while len(pop)<POPSIZE:
+    while len(pop)<(len(popJ)):
         pop.append(popJ[0])
-
 
 # Evaluate the population and pair fitnesses and weights
 pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
@@ -434,7 +442,6 @@ rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
 
 savePop(rankedPop)
 count = 0
-# Initialise an old population of all zeros
 oldPop=[0]*POPSIZE
 oldFitness=[0]*POPSIZE
 oldRankedPop=zip(oldPop,oldFitness)
@@ -442,7 +449,6 @@ oldRankedPop=zip(oldPop,oldFitness)
 mutateFlag=False
 mutateCount=0
 
-print "Starting main loop..."
 while count < MAXITER:
     # If we have a new highest fitness then save the population
     if rankedPop[0][-1] > previousFit:
@@ -458,9 +464,9 @@ while count < MAXITER:
     pop = GA.nextGen(rankedPop, mutateFlag, mutateCount)
 
     #DEBUG
-    for i in range(len(pop)):
-       if oldPop[0] == pop[i]:
-            print "Hit", i
+    #for i in range(len(pop)):
+    #   if oldPop[0] == pop[i]:
+    #        print "Hit", i
 
     # Evaluate the population and pair fitnesses and weights
     pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
@@ -468,7 +474,7 @@ while count < MAXITER:
     # Rank the population in order of fitness
     rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
 
-    print rankedPop[0][-1], rankedPop[1][-1], rankedPop[2][-1], oldFitness[0]
+    #print rankedPop[0][-1], oldFitness[0]
 
     if rankedPop[0][-1] == oldFitness[0]:
         mutateFlag=True
