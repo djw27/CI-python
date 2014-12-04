@@ -1,83 +1,43 @@
+
+# This code would be a good place to start your evolution coding.
 from operator import itemgetter, attrgetter
 import math,random, copy, pickle
-from pod.pods import Sensor,gui
+import numpy
+import pprint
 
+import sys
+sys.path.append("../../")
+from pod import world,gui,pods
+
+pp = pprint.PrettyPrinter(indent=4)
+
+TEST=False
+
+if TEST:
+    GUI=True
+else:
+    GUI=False
 
 FORWARDS_ANGLE = math.radians(0)
 LEFT_ANGLE = math.radians(90)
 RIGHT_ANGLE = math.radians(-90)
 
-class MyData:
-
-    def __init__(self):
-        """
-        NN Constants
-        """
-        self.inputNeurons = 7
-        self.hiddenNeurons = 5
-        self.outputNeurons = 4
-        self.layerVector = [self.inputNeurons, self.hiddenNeurons, self.outputNeurons]
-        self.weight = []
-
-    def setWeights(self, weightIn):
-        self.weight = weightIn
-        self.NN = NeuralNet(self.layerVector, self.weight)
-
-    def update(self, inputValues):
-        return self.NN.update(inputValues)
-
-Data = MyData()
-
 def equip_car(pod):
-    
-    global Data
-    Data = MyData()
 
-    sensors=[ Sensor(angle=FORWARDS_ANGLE,name="Forwards"),
-              Sensor(angle=LEFT_ANGLE/5,name="Eigth-Left"),
-              Sensor(angle=LEFT_ANGLE/3,name="Quarter-Left"),
-              Sensor(angle=RIGHT_ANGLE/5,name="Eigth-Right"),
-              Sensor(angle=RIGHT_ANGLE/3,name="QuarterRight"),
+    sensors=[ pods.Sensor(angle=FORWARDS_ANGLE,name="Forwards"),
+              pods.Sensor(angle=LEFT_ANGLE/5,name="Eigth-Left"),
+              pods.Sensor(angle=LEFT_ANGLE/3,name="Quarter-Left"),
+              pods.Sensor(angle=RIGHT_ANGLE/5,name="Eigth-Right"),
+              pods.Sensor(angle=RIGHT_ANGLE/3,name="QuarterRight"),
             ]
 
     pod.addSensors(sensors)
-
-    #weights,fitness=zip(*loadPop())
-    #text_file = open("Output.txt", "w")
-    #text_file.write(str(weights[0]))
-    #text_file.close()
-
-    if int(pod.sensors[0].val) == 151:
-        #print "carCircuit Detected"
-        weightIn = [[[0.06866547795327779, 0.11144801140385793, 0.6223089846713334, -0.97499448575394, -0.25708296654489105], [-0.1982519263221387, -0.09226168251808448, 0.1665767897010385, -0.040991475852538, 0.8311864428779787], [-0.16460950542524386, -0.37857775575901953, 0.23937829363435018, -0.12660937610360018, 0.4137266515712257], [0.6276180244688228, 0.8175033415513987, -0.15344727416926376, 0.9184082103277633, 0.23861451790443958], [-0.728545314723576, -0.2959210653299112, -0.6696675880949834, -0.016388067410802884, -0.8476772183512125], [-0.28020848703213763, 0.7391661181191495, -0.8373650016675228, 0.031352566910217705, 0.2441355421940482], [0.6243503757484972, 0.9871327366448147, 0.16642182863932056, 0.4660118487580872, 0.4073755532087496], [0.3882858777093686, -0.04443460918681701, 0.2978528529490344, -0.3420140039960344, 0.6468347395888513]], [[0.9230047639113808, -0.950666415990008, -0.7418938768618866, 0.288140054598376], [1.0114223012103583, -0.08696974684018817, -0.21937763547786138, 0.07608478008025386], [0.7533482341459188, -0.6244157798219151, -0.5460585979247842, -0.3061294141981798], [0.3216492271534129, 0.23675860497468962, -0.83794642409949, 0.9521720364929847], [0.04148497003081503, 0.6765410463854783, 0.466164170595486, -0.4084463195638502]]]
-    elif int(pod.sensors[0].val) == 248:
-        #print "round Detected"
-        weightIn = [[[0.04151645566403746, -0.05498516926198404, 0.5554401750686947, -0.929342910233601, -0.1577405284938155], [-0.20463333897999106, -0.10735042793631995, 0.002570997113094109, -0.05836146229859784, 0.9084880982138378], [-0.25757535170755513, -0.263443864578521, 0.22668932944844183, -0.056936571907964986, 0.48023271385365457], [0.7388703943973197, 0.7102910821976746, 0.06829680248137131, 0.8562579017333802, 0.3258893574342656], [-0.8706422528082591, -0.14686549042323802, -0.692837863874162, -0.006193857129844615, -0.8744171204877932], [-0.2171093950781897, 0.5870221675627624, -0.7923306545349627, -0.0492694061021292, 0.19263332654282653], [0.714341362878397, 0.906527309316677, 0.04271707411000142, 0.48280927128480355, 0.35211985692595943], [0.18218093929602094, 0.09323709358337462, 0.2361542401591827, -0.1838123495627075, 0.7939462026501695]], [[1.1715837859522067, -1.0180164685089024, -0.6794695855541864, 0.2336358726512687], [0.8221177459117912, 0.21204532996471853, 0.00606433802852633, -0.3905371451637919], [0.7425280883836409, -0.7313336645224282, -0.5641770866265953, -0.38622434368055414], [0.42518000748369095, 0.03782455329058794, -0.8778169165884087, 0.8592792541555044], [-0.1106134947888105, 0.7869647655606847, 0.7591872399302029, -0.6504877763050507]]]
-    elif int(pod.sensors[0].val) == 604:
-        #print "long Detected"
-        weightIn = [[[-0.020025037816636504, 0.010127629163784915, 0.5269900439561237, -1.19455088651966, -0.40986106403107636], [-0.34550572200854357, -0.11150832602481014, 0.04448764714187785, 0.010844516089512424, 0.7935995845510659], [-0.36635424799265914, -0.34475794754752026, 0.39306459120898507, -0.03696419686631683, 0.40790673563540547], [0.7064149487235908, 0.9064284092487662, 0.051399614139693434, 0.81246302828395, 0.196012820673353], [-0.8300132796365357, -0.0444624203505727, -0.6778477642618644, 0.02821092059170465, -0.8771490227538632], [-0.04459343825266334, 0.980695806752009, -0.5523757856760151, 0.06288484848976222, 0.2855422953105551], [0.7122812876628353, 0.5985133874751476, 0.14560247819628636, 0.5461013671348041, 0.32151251277155896], [0.11052025573143474, -0.19234362862696316, 0.11216765680236754, -0.4665733232752583, 0.5664490933942152]], [[1.0811639928502064, -0.8648759452871192, -0.47501672282943586, 0.14954957376747058], [0.40988484605731784, 0.24138681332361178, -0.00844635411519537, -0.2718187552419856], [0.5169586019838843, -0.9518930006358248, -0.481297927596149, -0.5532362248775893], [0.5599319878679074, -0.07486536009060979, -0.5372341621556384, 0.795430701610383], [-0.09260250007894899, 0.8182761687976057, 0.6685005513041525, -0.4731027018900499]]]
-    elif int(pod.sensors[0].val) == 172:
-        #print "chick Detected"
-        weightIn = [[[0.08860507841353929, 0.034876261719728366, 0.4859710939561501, -0.929342910233601, -0.11294153939579282], [-0.4564392865772603, -0.1723098145330048, 0.19068161726002827, 0.029928226050473537, 0.8220091663307864], [-0.2877238033035588, -0.403312038114011, 0.5094474272184969, -0.06783811460127219, 0.33733447070925837], [0.6042615314109112, 0.85766079964457, -0.05614160018495842, 0.8875335895869965, 0.2011411624230198], [-0.8559724847302415, -0.26781236411993115, -0.7345156476369362, -0.04832438894214637, -0.7014085575161186], [-0.15948632127160534, 0.8186197357101606, -0.8959784990099322, 0.031352566910217705, 0.34650802377855094], [0.7337180803381608, 1.0101135564231867, -0.17316462815049544, 0.482679287871061, 0.39929391796274494], [0.38673156385255986, -0.08137003195096804, 0.271256667819736, -0.10204757492011916, 0.6560298500620967]], [[0.8806650692506403, -1.029575205683781, -0.5468673709098264, -0.004243348348071607], [0.9472895136336369, -0.04616396126747389, -0.20944775905224614, 0.048624626794493406], [0.719156530829043, -0.6917137160792097, -0.43236710592395955, -0.4437502668230735], [0.4786950198279092, 0.08152296307234333, -0.9267780761296213, 0.9218246220276474], [0.0339656624222638, 0.7000042445763432, 0.6132688306208604, -0.4084463195638502]]]
-    else:
-        #print "New track Detected!"
-        weightIn = [[[0.008428211023133594, -0.001668821632506333, 0.4746812298495242, -0.929342910233601, -0.24685285664336876], [-0.281364285200693, -0.1405467616734094, -0.003179189672476645, -0.040991475852538, 0.9106647185513694], [-0.2675850378031022, -0.33246904936288785, 0.3280008455663596, 0.013646831023984264, 0.4391541526709142], [0.7139177318330789, 0.8397324860046375, -0.10058522766264952, 0.9156590538952044, 0.196012820673353], [-0.8597204347915001, -0.18444679892650134, -0.6863980617801682, -0.03859548842287741, -0.8476772183512125], [-0.19568169067655047, 0.7874179306815358, -0.7632604787258707, 0.031352566910217705, 0.19263332654282653], [0.7550960002716901, 0.9358687532631965, 0.112224429721129, 0.4535898469539765, 0.3981873499987813], [0.29959997993768395, -0.04443460918681701, 0.27809236300821955, -0.21248344017168036, 0.6477393319910825]], [[0.9230047639113808, -0.9310368236515731, -0.6328786584776744, 0.21945320299759197], [0.8324735040542348, -0.045508124206933426, -0.16977874469357845, -0.016306394256950588], [0.7821013939240752, -0.7692557841504156, -0.5460585979247842, -0.37801910818426243], [0.508914829474565, 0.08249005982899177, -0.794801663453934, 0.9218246220276474], [-0.0155174627860531, 0.698845757318076, 0.6443757023243802, -0.4084463195638502]]]
-
-    Data.setWeights(weightIn)
-
-    pod.col=(204,255,225)
-    pod.data= [0,0,0,0,0,0,0]
-    pod.poly=[(-20*random.random(),-20*random.random()),(-20*random.random(),20*random.random()),(20*random.random(),20*random.random()),(20*random.random(),-20*random.random())]
-
-
-def controller(pod,control):
-    """
-    if pod.state.age < 0.05:
-
-            """
+    pod.col=(0,255,0)
+    pod.data=[0,0,0,0]    # default control system parameters
 
 
 
+def controller(pod,control,NN):
 
     inputValues = [ pod.sensors[0].val,
                     pod.sensors[1].val,
@@ -87,25 +47,64 @@ def controller(pod,control):
                     pod.state.vel,
                     pod.state.slip,
                   ]
-    pod.data = Data.update(inputValues)
+    pod.data = NN.update(inputValues)
 
     """
     Simplest possible control system. The NN calculates
     values for acceleration, braking and left/right for
     any given sensor values
     """
+
     if pod.state.age < 0.45:
         control.up=1.0
         control.down=0.0
         control.left=pod.data[2]
         control.right=pod.data[3]
     else:
-        control.up=pod.data[0]
+        if pod.sensors[0].val >= 400:
+            control.up=1.0
+            control.down=0.0
+        else:
+            control.up=pod.data[0]
         control.down=pod.data[1]
         control.left=pod.data[2]
         control.right=pod.data[3]
 
+def evaluate(pod,NN,simple_gui):
+    """
+    Showing how you can evaluate the performance of your car.
+    """
 
+    TIME_LIMIT=40.0
+    TRIPS_LIMIT=60.0
+
+    # reset the state of the car before starting
+    pod.reset()
+
+    while True:
+
+        if GUI:
+            mess=str(pod.state)
+            simple_gui.set_message(mess)
+            simple_gui.display()
+
+            if simple_gui.check_for_quit():
+                break
+
+        if pod.state.collide:
+            dist=pod.state.pos_trips-pod.state.neg_trips+pod.state.seg_pos
+            age=pod.state.age
+            return dist
+
+        if pod.state.age > TIME_LIMIT:
+            dist=pod.state.pos_trips-pod.state.neg_trips
+            return dist
+
+        if pod.state.pos_trips - pod.state.neg_trips > TRIPS_LIMIT:
+            return TRIPS_LIMIT + (TIME_LIMIT-pod.state.age)
+
+        controller(pod,control,NN)
+        pod.step(control)
 
 class NeuralNet(object):
     """
@@ -170,6 +169,7 @@ class NeuralNet(object):
         # Return the outputs
         return self.out[len(self.layerVector)-1]
 
+
 class GeneticAlgorithm(object):
     """
     Generalised class for
@@ -215,7 +215,7 @@ class GeneticAlgorithm(object):
             for j in range(len(m[i])):
                 for k in range(len(m[i][j])):
                     if random.random() < MUTATEPROB:
-                        m[i][j][k] += random.uniform(-1.0, 1.0)*0.1
+                        m[i][j][k] += random.uniform(-1.0, 1.0)*0.05
 
     def mutateMore(self, m):
         for i in range(len(m)):
@@ -258,7 +258,7 @@ class GeneticAlgorithm(object):
 
             while len(newPop) < POPSIZE:
                 i = random.randint(0,NSELECT-1)
-                if random.random() < CROSSOVERPROB:
+                if random.random() < 0:
                     j = random.randint(0,NSELECT-1)
                     while i==j:
                         j = random.randint(0,NSELECT-1)
@@ -275,7 +275,7 @@ class GeneticAlgorithm(object):
                 else:
                     geneInput = self.clone(wi[i])
                     geneOutput = self.clone(wo[i])
-                    self.mutate([geneInput,geneOutput])
+                    self.mutateLess([geneInput,geneOutput])
 
                 newPop.append([geneInput,geneOutput])
 
@@ -323,7 +323,7 @@ def randomizeMatrix(matrix, a, b):
         for j in range ( len (matrix[0]) ):
             matrix[i][j] = random.uniform(a,b)
 
-def savePop(pop,filename="pop.dat"):
+def savePop(pop,filename="popSaved_forward_sense_no_brake.dat"):
     """
     Saves a population
     """
@@ -332,7 +332,7 @@ def savePop(pop,filename="pop.dat"):
     pickle.dump(pop,fout)
     fout.close()
 
-def loadPop(filename="popSaved045_carCircuit.dat"):
+def loadPop(filename="pop_forward_sense_no_brake.dat"):
     """
     Loads a saved population
     """
@@ -367,7 +367,129 @@ def pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons):
                 fitness+=evaluate(pod, NN, simple_gui)
             else:
                 fitness+=evaluate(pod, NN, 0)
+
         weights.append(weight)
         fitnesses.append(fitness)
 
     return zip(weights, fitnesses)
+
+
+
+
+worlds = []
+worlds.append(world.World("../../worlds/carCircuit.world"))
+worlds.append(world.World("../../worlds/pjl_round.world"))
+worlds.append(world.World("../../worlds/pjl_long.world"))
+worlds.append(world.World("../../worlds/pjl_chick.world"))
+
+
+# use a control to activate the car.
+control=pods.Control()
+
+"""
+Constants are defined here
+"""
+previousFit = 0
+"""
+GA Constants
+"""
+POPSIZE         = 100      # Population size
+MAXITER         = 1000        # Maximum number of iterations
+CROSSOVERPROB   = 0.5       # Probability that we create by crossover breeding
+MUTATEPROB      = 0.1       # Mutation rate of crossover offspring
+ELITEPERCENT    = 0.1      # Percentage of ranked population to keep
+SELECTPERCENT   = 0.3       # Top 30% available for selection
+targetFitness   = 400
+
+NELITE  = int(POPSIZE*ELITEPERCENT)     # top of population survive
+NSELECT = int(POPSIZE*SELECTPERCENT)    # how many are bred
+"""
+NN Constants
+"""
+inputNeurons = 7
+hiddenNeurons = 5
+outputNeurons = 4
+layerVector = [inputNeurons, hiddenNeurons, outputNeurons]
+
+
+if TEST:
+    popR=loadPop()
+    pop,fitness=zip(*popR)
+else:
+    # Initialise an instance of the GA and generate a random
+    # starting population
+    GA = GeneticAlgorithm(layerVector, POPSIZE)
+    #pop=GA.generatePop()
+    popR=loadPop()
+    popJ,fitness=zip(*popR)
+    previousFit = fitness[0]
+    pop=[]
+    while len(pop)<POPSIZE:
+        pop.append(popJ[0])
+
+
+# Evaluate the population and pair fitnesses and weights
+pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
+# Rank the population in order of fitness
+rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
+
+savePop(rankedPop)
+count = 0
+# Initialise an old population of all zeros
+oldPop=[0]*POPSIZE
+oldFitness=[0]*POPSIZE
+oldRankedPop=zip(oldPop,oldFitness)
+
+mutateFlag=False
+mutateCount=0
+
+print "Starting main loop..."
+while count < MAXITER:
+    # If we have a new highest fitness then save the population
+    if rankedPop[0][-1] > previousFit:
+        previousFit = rankedPop[0][-1]
+        savePop(rankedPop)
+        print "Saved new Population with fitness: " + repr(rankedPop[0][-1]) + " Iteration: " + repr(count)
+
+    # If we have reached our goal then stop
+    if rankedPop[0][-1] >= targetFitness:
+        break
+
+    # Generate the new population
+    pop = GA.nextGen(rankedPop, mutateFlag, mutateCount)
+
+    #DEBUG
+    for i in range(len(pop)):
+       if oldPop[0] == pop[i]:
+            print "Hit", i
+
+    # Evaluate the population and pair fitnesses and weights
+    pairedPop = pairPop(pop,inputNeurons,hiddenNeurons,outputNeurons)
+
+    # Rank the population in order of fitness
+    rankedPop = sorted(pairedPop, key=itemgetter(-1), reverse = True)
+
+    print rankedPop[0][-1], rankedPop[1][-1], rankedPop[2][-1], oldFitness[0]
+
+    if rankedPop[0][-1] == oldFitness[0]:
+        mutateFlag=True
+        mutateCount+=1
+    else:
+        mutateCount=0
+
+    if mutateCount>5:
+        mutateCount=0
+
+    # If the new mutated highest fitness is less than
+    # the previously calculated then discard the new
+    # generation and replace with the old generation
+    if rankedPop[0][-1] < oldFitness[0]:
+        rankedPop = oldRankedPop
+
+    oldRankedPop = rankedPop
+
+    oldPop, oldFitness = zip(*oldRankedPop)
+
+    print "================================================="
+
+    count += 1
