@@ -1,23 +1,22 @@
-
-# This code would be a good place to start your evolution coding.
 from operator import itemgetter, attrgetter
 import math,random, copy, pickle
 import numpy
 import pprint
 
+# Link to the main PodWorld directory
 import sys
 sys.path.append("../../")
 from pod import world,gui,pods
 
-pp = pprint.PrettyPrinter(indent=4)
-
+# If the user would like to test a generated population then change the
+# TEST flag to true
 TEST=False
-
 if TEST:
     GUI=True
 else:
     GUI=False
 
+# Define angles used for sensor positioning on the car
 FORWARDS_ANGLE = math.radians(0)
 LEFT_ANGLE = math.radians(90)
 RIGHT_ANGLE = math.radians(-90)
