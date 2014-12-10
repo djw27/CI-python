@@ -1,7 +1,5 @@
-from operator import itemgetter, attrgetter
+from operator import itemgetter
 import math,random, copy, pickle
-import numpy
-import pprint
 
 # Link to the main PodWorld directory
 import sys
@@ -68,7 +66,7 @@ def controller(pod,control,NN):
     # 0.45s into a race then accelerate max and brake zero, whilst
     # allowing the Neural Net to control the steering.
     #
-    # Let the Neural Net control the car fullt after this.
+    # Let the Neural Net control the car fully after this.
     if pod.state.age < 0.45:
         control.up=1.0
         control.down=0.0
@@ -130,6 +128,7 @@ def evaluate(pod,NN,simple_gui):
         # current timestep and then step the car forward
         controller(pod,control,NN)
         pod.step(control)
+    return
 
 class NeuralNet(object):
     """
@@ -270,6 +269,7 @@ class GeneticAlgorithm(object):
                 for k in range(len(weights[i][j])):
                     if random.random() < MUTATEPROB:
                         weights[i][j][k] = random.uniform(-1.0, 1.0)
+        return
 
     def mutateSmallNudge(self, weights):
         """
@@ -281,6 +281,7 @@ class GeneticAlgorithm(object):
                 for k in range(len(weights[i][j])):
                     if random.random() < MUTATEPROB:
                         weights[i][j][k] += random.uniform(-1.0, 1.0)*0.05
+        return
 
     def mutateBigNudge(self, weights):
         """
@@ -292,6 +293,7 @@ class GeneticAlgorithm(object):
                 for k in range(len(weights[i][j])):
                     if random.random() < MUTATEPROB*2:
                         weights[i][j][k] += random.uniform(-1.0, 1.0)
+        return
 
     def crossover(self, mother, father):
         """
@@ -414,6 +416,7 @@ def randomizeMatrix(matrix, a, b):
     for i in range ( len (matrix) ):
         for j in range ( len (matrix[0]) ):
             matrix[i][j] = random.uniform(a,b)
+    return
 
 def savePop(pop,filename="popTest.dat"):
     """
@@ -423,6 +426,7 @@ def savePop(pop,filename="popTest.dat"):
     fout=open(filename,'w')
     pickle.dump(pop,fout)
     fout.close()
+    return
 
 def loadPop(filename="popTest.dat"):
     """
@@ -488,12 +492,12 @@ the user intervenes.
 
 # Create an array of the tracks for which to evaluate the car on
 worlds = []
-#worlds.append(world.World("../../worlds/carCircuit.world"))
-#worlds.append(world.World("../../worlds/pjl_round.world"))
-#worlds.append(world.World("../../worlds/pjl_long.world"))
-#worlds.append(world.World("../../worlds/pjl_chick.world"))
+worlds.append(world.World("../../worlds/carCircuit.world"))
+worlds.append(world.World("../../worlds/pjl_round.world"))
+worlds.append(world.World("../../worlds/pjl_long.world"))
+worlds.append(world.World("../../worlds/pjl_chick.world"))
 worlds.append(world.World("../../worlds/bravenew.world"))
-
+worlds.append(world.World("../../worlds/unseen2.world"))
 
 # Use a control to activate the car.
 control=pods.Control()
@@ -502,7 +506,7 @@ control=pods.Control()
 Genetic Algorithm Constants
 """
 # Population size
-POPSIZE         = 10
+POPSIZE         = 100
 # Maximum number of generations
 MAXITER         = 1000
 # Probability that a gene is created by crossover breeding
@@ -516,16 +520,16 @@ ELITEPERCENT    = 0.1
 # population
 SELECTPERCENT   = 0.3
 # The genetic algorithm will continue running until this fitness value
-# is reached. 400 is based on evaluating the fitness across 4 tracks
+# is reached. 600 is based on evaluating the fitness across 6 tracks
 # and represents an unattainable value
-targetFitness   = 400
+targetFitness   = 600
 
 NELITE  = int(POPSIZE*ELITEPERCENT)     # Top of the population survive
 NSELECT = int(POPSIZE*SELECTPERCENT)    # Number of genes to breed from
 """
 Neural Net Constants
 """
-inputNeurons = 7
+inputNeurons  = 7
 hiddenNeurons = 5
 outputNeurons = 4
 # Combine the neurons into a vector to simplify use throughout code
@@ -534,20 +538,19 @@ layerVector = [inputNeurons, hiddenNeurons, outputNeurons]
 General Variables
 """
 # Store the highest fitness value achieved so far. Initialise to 0
-maxFitness = 0
+maxFitness          = 0
 # Count the number of generations that have been bred.
-count = 0
+count               = 0
 # Counts the number of generations since the best fitness last improved
-noImprovementCount=0
+noImprovementCount  = 0
 
 # A flag used to notify the Genetic Algorithm that the best fitness is
 # not improving and therefore to change the type of mutation being
 # carried out to try and improve the best fitness
-stuckFlag=False
-
+stuckFlag  = False
 # Initialise an old population of all zeros. oldRankedPop is used to
 # ensure that t
-oldFitness=0
+oldFitness = 0
 
 if TEST:
     # If in test mode then load the saved population for testing
