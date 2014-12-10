@@ -117,6 +117,3 @@ CI_2014/PodWorld/*
 
 CI_2014/PodWorld/punters/*
 !CI_2014/PodWorld/punters/djw27
-
-CI_2014/PodWorld/punters/djw27/*
-!CI_2014/PodWorld/punters/djw27/Final
