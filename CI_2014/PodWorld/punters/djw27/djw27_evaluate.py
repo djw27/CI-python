@@ -147,7 +147,6 @@ class NeuralNet(object):
         self.nh = self.layerVector[1]              # Hidden layer size
         self.no = self.layerVector[2]              # Output layer size
 
-
         # Set the input and output weights
         self.weights = weights
         self.wi = self.weights[0]
@@ -225,7 +224,7 @@ class GeneticAlgorithm(object):
         Gene: [ [Input weights] , [Output weights] ]
 
         Input weights: [Input neuron 1 weights to each hidden layer neuron],
-                       [Input neuron 1 weights to each hidden layer neuron],
+                       [Input neuron 2 weights to each hidden layer neuron],
                        ...                                                 ,
                        [Input neuron i weights to each hidden layer neuron]
 
@@ -406,8 +405,6 @@ def tanh(value):
 
     return math.tanh(value)
 
-
-
 def randomizeMatrix(matrix, a, b):
     """
     This function will fill a given matrix with random values.
@@ -482,7 +479,6 @@ def pairPop(pop,layerVector):
 
     # Return a combined tuple of weights and their fitnesses
     return zip(weights, fitnesses)
-
 
 """
 Main code is placed below. This code will set the genetic algorithm
