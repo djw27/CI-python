@@ -157,7 +157,7 @@ class NeuralNet(object):
 
         for i in range(len(self.layerVector)):
             # Create an array for each 'layer' of output values i.e.
-            # hidden layer values and final output values
+            # input layer, hidden layer and output layer values
             self.out.append([])
             # Starting at the hidden layer, append zeros representing
             # temporary output values
@@ -249,8 +249,8 @@ class GeneticAlgorithm(object):
             # Allocate memory for the output weights
             wo = [ [0.0]*self.no for j in range(self.nh) ]
             # Randomize the weight values
-            randomizeMatrix(wi, -0.2, 0.2)         # +-0.2 arbitrary
-            randomizeMatrix(wo, -2.0, 2.0)         # +-2.0 arbitrary
+            randomizeMatrix(wi, -1.0, 1.0)         # +-1.0 arbitrary
+            randomizeMatrix(wo, -1.0, 1.0)         # +-1.0 arbitrary
             # Construct a gene from the weights
             gene = [wi, wo]
             # Add the gene to the population

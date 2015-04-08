@@ -77,9 +77,6 @@ def controller(pod,control):
 
             """
 
-
-
-
     inputValues = [ pod.sensors[0].val,
                     pod.sensors[1].val,
                     pod.sensors[2].val,
